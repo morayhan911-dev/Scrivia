@@ -8,15 +8,6 @@ import streamlit as st
 
 ROOT = Path(__file__).parent
 
-# Lucide-style 24px stroke icons, decorative (text label always sits next to them).
-_PATHS = {
-    "verified": '<path d="M20 6 9 17l-5-5"/>',
-    "suggest": '<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
-    "unclear": '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
-    "unrecognized": '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
-    "checked": '<path d="M20 6 9 17l-5-5"/>',
-    "error": '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
-}
 LABELS = {
     "verified": "Verified",
     "suggest": "Did you mean {s}?",
@@ -29,8 +20,7 @@ GRID = {"verified": "✓ Verified", "suggest": "⇄ Did you mean {s}?", "unclear
 
 
 def icon(name):
-    return (f'<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" '
-            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{_PATHS[name]}</svg>')
+    return f'<span class="ic ic--{name}" aria-hidden="true"></span>'
 
 
 def css():
@@ -94,8 +84,9 @@ def step_head(step, title, lede):
     return f'<header class="step-head" data-step="{step}"><h2>{escape(title)}</h2><p class="lede">{lede}</p></header>'
 
 
-def framing(total, flagged):
-    need = f"<strong>{flagged} need your eyes.</strong>" if flagged else "<strong>All of them match known medicines.</strong>"
+def framing(total, flagged, done):
+    need = (f"<strong>{done} of {flagged} flagged lines checked</strong>" if flagged
+            else "<strong>All of them match known medicines</strong>")
     return f"""<div class="framing">
   <div class="framing__part"><span class="framing__k">Read by the scanner</span><span class="framing__v">{total} lines</span></div>
   <span class="framing__arrow" aria-hidden="true"></span>
@@ -103,8 +94,8 @@ def framing(total, flagged):
 </div>"""
 
 
-def chip(status, suggestion=None):
-    label = LABELS[status].format(s=escape(suggestion or ""))
+def chip(status, suggestion=None, label=None):
+    label = label or LABELS[status].format(s=escape(suggestion or ""))
     return f'<span class="chip chip--{status}">{icon(status)}<span>{label}</span></span>'
 
 
@@ -112,18 +103,24 @@ def grid_status(status, suggestion=None):
     return GRID[status].format(s=suggestion or "")
 
 
-def flag_item(line_no, row, status, suggestion, resolved):
+def flag_item(line_no, row, status, suggestion, resolved, fixed=False):
     state = "checked" if resolved else status
     hint = {
         "suggest": f"The scan read <b>{escape(row['medicine'])}</b>. A known medicine is spelled <b>{escape(suggestion or '')}</b>. Compare with your photo.",
-        "unclear": "Part of this line could not be read. Type what the slip says, or keep it and ask your doctor.",
+        "unclear": "Part of this line could not be read. Type what the slip says in the table, or keep it and ask your doctor.",
         "unrecognized": "This name is not in our list. It may be a misread or a brand we do not know. Check the spelling against your photo.",
+        "verified": "",
     }[status]
+    if not row["medicine"].strip():
+        hint = "New line. Type the medicine, dose and how often in the table below."
     if resolved:
-        hint = "You looked at this line. Your decision is kept."
+        hint = "Corrected by you. It now matches a known medicine." if fixed else "You looked at this line. Your decision is kept."
+    label = "Fixed by you" if fixed else None
+    text = " · ".join(escape(v) for v in (row["dosage"], row["frequency"]) if v.strip())
+    name = escape(row["medicine"]) or "New line"
     return f"""<div class="flag flag--{state}" data-resolved="{str(resolved).lower()}">
-  <div class="flag__top"><span class="flag__line">Line {line_no}</span>{chip("checked") if resolved else chip(status, suggestion)}</div>
-  <p class="flag__text"><span class="mono">{escape(row['medicine'] or '(blank)')}</span> · {escape(row['dosage'])} · {escape(row['frequency'])}</p>
+  <div class="flag__top"><span class="flag__line">Line {line_no}</span>{chip("checked", label=label) if resolved else chip(status, suggestion)}</div>
+  <p class="flag__text"><span class="mono">{name}</span>{" · " + text if text else ""}</p>
   <p class="flag__hint">{hint}</p></div>"""
 
 

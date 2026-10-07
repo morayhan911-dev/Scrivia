@@ -69,6 +69,10 @@ def apply_fix(i, value):
     set_df(df)
 
 
+def remove_row(i):
+    set_df(ss.verified_df.drop(index=i))
+
+
 def toggle_ack(rid):
     ss.acked = [a for a in ss.acked if a != rid] if rid in ss.acked else [*ss.acked, rid]
 
@@ -149,11 +153,16 @@ if ss.step == 1:
 # ---------- step 2: verify (centerpiece) ----------
 elif ss.step == 2:
     df = ss.verified_df
-    stats = [row_status(r) for r in df.to_dict("records")]
-    flagged = [(n, r, s) for n, (r, s) in enumerate(zip(df.to_dict("records"), stats), 1) if s["status"] != "verified"]
+    records = df.to_dict("records")
+    stats = [row_status(r) for r in records]
+    raw_flagged = {r["_id"] for r in ss.raw_rows if row_status(r)["status"] != "verified"}
+    # a line stays in the review list if the scan flagged it or it is flagged now (fixed lines show as done)
+    flagged = [(n, r, s) for n, (r, s) in enumerate(zip(records, stats), 1)
+               if s["status"] != "verified" or r["_id"] in raw_flagged]
+    pending = blocking(df)
     st.html(ui.step_head(2, "Check what we read",
                          "Handwriting gets misread. Nothing moves forward until you have looked at every flagged line."))
-    st.html(ui.framing(len(df), len(flagged)))
+    st.html(ui.framing(len(df), len(flagged), len(flagged) - len(pending)))
 
     photo, review = st.columns([2, 3], gap="large")
     with photo:
@@ -161,16 +170,21 @@ elif ss.step == 2:
     with review, st.container(key="review"):
         if not flagged:
             st.html(ui.all_clear())
-        pending = blocking(df)
         for n, row, s in flagged:
             acked = row["_id"] in ss.acked
-            st.html(ui.flag_item(n, row, s["status"], s["suggestion"], n not in pending))
+            fixed = s["status"] == "verified"
+            st.html(ui.flag_item(n, row, s["status"], s["suggestion"], n not in pending, fixed))
+            if fixed:
+                continue
             with st.container(horizontal=True, key=f"flag_actions_{row['_id']}"):
                 if s["suggestion"] and not acked:
                     st.button(f"Use {s['suggestion']}", key=f"fix_{row['_id']}", type="primary",
                               on_click=apply_fix, args=(n - 1, s["suggestion"]))
-                st.button("Undo" if acked else "Keep as written", key=f"ack_{row['_id']}",
-                          on_click=toggle_ack, args=(row["_id"],))
+                if not row["medicine"].strip():
+                    st.button("Remove this line", key=f"rm_{row['_id']}", on_click=remove_row, args=(n - 1,))
+                else:
+                    st.button("Undo" if acked else "Keep as written", key=f"ack_{row['_id']}",
+                              on_click=toggle_ack, args=(row["_id"],))
 
     st.subheader("All lines", anchor=False)
     st.caption("Click any cell to correct it. Select a row's left edge and press Delete to remove a line.")
@@ -195,7 +209,6 @@ elif ss.step == 2:
         st.rerun()
     st.button("Add a missing line", icon=":material/add:", on_click=add_row)
 
-    pending = blocking(df)
     st.html(ui.confirm_hint(pending))
     with st.container(horizontal=True, key="step2_actions"):
         st.button("Start over", on_click=reset, icon=":material/restart_alt:")
