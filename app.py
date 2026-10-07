@@ -8,7 +8,7 @@ from PIL import Image
 
 import ui
 # Backend contract: Gemini reads the photo, Groq writes the report and the chat answers.
-from backend import chat_reply, check_medicine, extract_prescription, generate_report
+from backend import chat_reply, check_medicine, extract_prescription, generate_report, report_pdf
 from dummy_data import SAMPLES
 
 APP_NAME = "Scrivia"
@@ -23,7 +23,7 @@ st.set_page_config(page_title=f"{APP_NAME}: understand your prescription", page_
 st.markdown(ui.css(), unsafe_allow_html=True)
 
 DEFAULTS = {"step": 1, "demo_mode": True, "selected_sample": "fever", "raw_rows": list, "verified_df": None,
-            "chat_history": list, "image_bytes": None, "acked": list, "editor_ver": 0, "report": "", "error": ""}
+            "chat_history": list, "image_bytes": None, "acked": list, "editor_ver": 0, "report": "", "pdf": None, "error": ""}
 for k, v in DEFAULTS.items():
     if k not in st.session_state:
         st.session_state[k] = v() if callable(v) else v
@@ -53,7 +53,7 @@ def blocking(df):
 
 
 def reset():
-    for k in ("raw_rows", "verified_df", "chat_history", "image_bytes", "acked", "report", "error"):
+    for k in ("raw_rows", "verified_df", "chat_history", "image_bytes", "acked", "report", "pdf", "error"):
         del ss[k]
     ss.step = 1
     ss.editor_ver += 1
@@ -224,7 +224,9 @@ elif ss.step == 2:
         ss.error = ""
         with st.spinner("Writing your plain-English report..."):
             try:
-                ss.report = generate_report(df[COLS].to_dict("records"))
+                confirmed = df[COLS].to_dict("records")
+                ss.report = generate_report(confirmed)
+                ss.pdf = report_pdf(confirmed, ss.report)
                 ss.chat_history, ss.step = [], 3
             except Exception as e:
                 print(f"generate_report failed: {e!r}")
@@ -241,6 +243,9 @@ else:
         st.html(html)
     else:
         st.markdown(ss.report)
+    if ss.pdf:
+        st.download_button("Download report (PDF)", ss.pdf, file_name="scrivia-report.pdf", mime="application/pdf",
+                           icon=":material/download:", on_click="ignore")
     st.html(ui.disclaimer())
 
     st.subheader("Ask about these medicines", anchor=False)

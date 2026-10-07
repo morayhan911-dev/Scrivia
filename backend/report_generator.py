@@ -1,8 +1,9 @@
 """Plain-English report for the confirmed lines, written by Groq (prompts 3 and 4)."""
 import json
 
+from . import report
 from .backend_groq import GENERAL, IN_LIST, SUMMARY_PROMPT, ask, facts, facts_text
-from .safety import explain_frequency
+from .safety import check_medicine, explain_frequency
 
 NOTES = {GENERAL: "General information, not checked against our list. Please confirm with your pharmacist.",
          "NOT CONFIRMED": "We could not confirm this medicine, so no details are given. Please ask your pharmacist."}
@@ -26,3 +27,14 @@ def generate_report(rows: list[dict]) -> str:
         if label != IN_LIST:
             out.append(f"**Note:** {NOTES[label]}")
     return "\n".join(out)
+
+
+def report_pdf(rows: list[dict], report_md: str) -> bytes:
+    """The same report as a PDF. Reuses the cached medicine facts, so no new LLM calls."""
+    source = {IN_LIST: "list", GENERAL: "general"}
+    meds = facts(rows)
+    data = {"medicines": [{"name": r["medicine"], "strength": r["dosage"], "frequency": r["frequency"]} for r in rows]}
+    infos = [{**(info or {}), "source": source.get(label, "unconfirmed"), "recognised": info is not None}
+             for _, label, info in meds]
+    summary = report_md.split("\n## ")[0]
+    return report.make_pdf(data, [check_medicine(r["medicine"]) for r in rows], summary, infos)

@@ -204,8 +204,8 @@ def make_pdf(data, checks, summary, infos=None):
     story.append(Paragraph("Medicines", styles["Heading2"]))
 
     optional_columns = [
-        ("strength", "Strength", 2.0),
-        ("frequency", "How often", 3.2),
+        ("strength", "Strength", 2.4),
+        ("frequency", "How often", 5.0),
         ("duration", "Duration", 2.2),
         ("instructions", "Instructions", 2.6),
     ]
