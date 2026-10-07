@@ -33,9 +33,13 @@ def icon(name):
             f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{_PATHS[name]}</svg>')
 
 
-@st.cache_data
 def css():
     """styles.css with bundled fonts inlined as data URIs, so nothing loads from the network."""
+    return _css((ROOT / "styles.css").stat().st_mtime)
+
+
+@st.cache_data
+def _css(mtime):  # mtime in the cache key: edits to styles.css show up without a restart
     text = (ROOT / "styles.css").read_text(encoding="utf-8")
     return "<style>" + re.sub(r'url\("(assets/fonts/[^"]+)"\)', lambda m: f'url("{data_uri(m[1])}")', text) + "</style>"
 
