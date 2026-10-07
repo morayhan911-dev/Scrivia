@@ -242,7 +242,8 @@ else:
     history = st.container(key="chat")
     with st.container(horizontal=True, key="chips"):
         chip_q = next((q for q in SUGGESTIONS if st.button(q, key=f"chip_{q}")), None)
-    q = st.chat_input("Ask about a medicine on this prescription") or chip_q
+    with st.container(key="ask"):  # inside a container = inline under the report, not pinned to the viewport
+        q = st.chat_input("Ask about a medicine on this prescription") or chip_q
     with history:
         if not ss.chat_history and not q:
             st.html(ui.chat_empty(len(rows)))

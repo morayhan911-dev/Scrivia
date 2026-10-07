@@ -32,7 +32,8 @@ def plain_schedule(freq: str) -> str:
         return freq
     slots = [s for s, c in zip(("morning", "afternoon", "night"), m.groups()[:3]) if c != "0"]
     when = ", ".join(slots[:-1]) + " and " + slots[-1] if len(slots) > 1 else (slots or ["as directed"])[0]
-    rest = re.sub(r"(\d+) days", r"for \1 days", m[4].strip())
+    rest = re.sub(r"\b(at )?(morning|afternoon|night)\b", "", m[4], flags=re.I)  # already said by the slots
+    rest = re.sub(r"(\d+) days", r"for \1 days", re.sub(r"\s*,\s*(,\s*)*", ", ", rest)).strip(" ,")
     return f"{when.capitalize()}, {rest}" if rest else when.capitalize()
 
 
@@ -75,3 +76,14 @@ def chat_reply(history: list[dict], rows: list[dict], question: str) -> str:
         return ("Best avoided while on these medicines. Alcohol adds to drowsiness and strains the liver "
                 "and stomach. Ask your doctor what is safe for you.")
     return FALLBACK
+
+
+if __name__ == "__main__":  # self-check: python backend_stub.py
+    assert plain_schedule("1-0-1 after food, 30 days") == "Morning and night, after food, for 30 days"
+    assert plain_schedule("1-0-0 morning, 30 days") == "Morning, for 30 days"
+    assert plain_schedule("1-0-1, 7 days") == "Morning and night, for 7 days"
+    assert plain_schedule("UNCLEAR - PLEASE VERIFY").startswith("Not readable")
+    assert check_medicine("Folite") == {"status": "suggest", "suggestion": "Folvite"}
+    assert check_medicine("Zentrovix")["status"] == "unrecognized"
+    assert chat_reply([], [], "tell me a joke") == FALLBACK
+    print("ok")
