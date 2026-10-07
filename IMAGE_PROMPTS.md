@@ -81,4 +81,4 @@ Extra: slightly rushed handwriting, still legible.
 
 ## What you must generate (8 files)
 `assets/logo-mark.png`, `assets/favicon.png`, `assets/hero.png`, `assets/upload-empty.png`, `assets/error.png`, `assets/samples/sample-1-fever.jpg`, `assets/samples/sample-2-lookalike.jpg`, `assets/samples/sample-3-mixed.jpg`.
-Skipped on purpose: chat avatar (typographic initial instead), report header art (typography carries it). If generated prescription text differs from these lines, tell me and I update `dummy_data.py`.
+Skipped on purpose: chat avatar (Material icons in an ink circle instead), report header art (typography carries it). If generated prescription text differs from these lines, tell me and I update `dummy_data.py`.

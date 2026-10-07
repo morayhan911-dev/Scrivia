@@ -149,7 +149,7 @@ h1, h2, h3, .wordmark { font-family: var(--font-display); color: var(--ink); }
 .flag--checked .flag__text { color: var(--ink-2); }
 /* flag action rows (fragile: st-key-* classes from container keys) */
 [class*="st-key-flag_actions_"] { gap: var(--s-2); margin: calc(var(--s-2) * -1) 0 var(--s-3); }
-[class*="st-key-flag_actions_"] button { min-height: 40px; font-size: var(--t-sm); }
+[class*="st-key-flag_actions_"] button { font-size: var(--t-sm); }
 [class*="st-key-flag_actions_"] [data-testid="stButton"] { width: auto; }
 
 /* table: canvas grid, only the frame is stylable (fragile: stDataFrame testid) */
@@ -185,7 +185,7 @@ h1, h2, h3, .wordmark { font-family: var(--font-display); color: var(--ink); }
 .med__dose { margin: 0 0 var(--s-3); color: var(--ink-2); }
 .med__when { margin: 0; font-weight: 550; line-height: 1.45; }
 .med__when::first-line { background: linear-gradient(transparent 60%, var(--marker) 60%); }
-.med__facts { display: grid; gap: var(--s-3); margin: 0; max-width: var(--measure); }
+.med__facts { display: grid; gap: var(--s-3); margin: 0; padding: 0; max-width: var(--measure); }
 .med__facts dt { font-size: var(--t-xs); font-weight: 600; color: var(--ink-2); margin-bottom: 2px; }
 .med__facts dd { margin: 0; line-height: 1.55; }
 .med__note { margin: 0; padding: var(--s-3) var(--s-4); background: var(--bad-bg); border: 1px solid color-mix(in oklch, var(--bad) 40%, var(--line)); border-radius: var(--radius-sm); color: var(--ink); line-height: 1.5; }
@@ -244,3 +244,12 @@ h1, h2, h3, .wordmark { font-family: var(--font-display); color: var(--ink); }
   .callout { flex-direction: column; align-items: flex-start; }
 }
 
+/* tap-target top-ups found by the M6 audit (fragile: baseweb/stChatInput internals) */
+[data-baseweb="select"] input, [data-testid="stTextInputRootElement"] input { min-height: 42px; }
+[data-testid="stChatInputSubmitButton"] { min-width: var(--tap); }
+[data-testid="stChatInputTextArea"] { min-height: var(--tap); }
+@media (max-width: 640px) {
+  /* step 2: flagged lines before the photo; photo shrinks to a reference thumbnail */
+  [data-testid="stHorizontalBlock"]:has(.st-key-review) { flex-direction: column-reverse; }
+  [data-testid="stHorizontalBlock"]:has(.st-key-review) [data-testid="stImage"] img { max-height: 260px; object-fit: contain; width: auto; margin: 0 auto; }
+}
