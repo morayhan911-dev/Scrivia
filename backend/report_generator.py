@@ -20,6 +20,8 @@ def generate_report(rows: list[dict]) -> str:
     for r, label, info in meds:
         out += ["", f"## {r['medicine'] or 'Unreadable name'}", f"**Dose:** {r['dosage']}",
                 f"**When:** {explain_frequency(r['frequency'])}"]
+        if info:
+            out.append(f"**Contains:** {info['composition']}")
         if info and info.get("used_for"):
             out.append(f"**What it is for:** {info['used_for']}")
         out += [f"**{title}:** " + "; ".join(info[k]) for k, title in SECTIONS if info and info.get(k)]
@@ -37,4 +39,5 @@ def report_pdf(rows: list[dict], report_md: str) -> bytes:
     infos = [{**(info or {}), "source": "list" if label == IN_LIST else "unconfirmed", "recognised": info is not None}
              for _, label, info in meds]
     summary = report_md.split("\n## ")[0]
-    return report.make_pdf(data, [check_medicine(r["medicine"]) for r in rows], summary, infos)
+    checks = [{**check_medicine(r["medicine"]), "generic": (info or {}).get("composition", "")} for r, _, info in meds]
+    return report.make_pdf(data, checks, summary, infos)

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from groq import Groq
 
-from .safety import check_medicine
+from .safety import check_medicine, lookup_composition
 
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 MAX_HISTORY = 20  # messages of earlier chat sent back each turn; older ones drop off
@@ -49,7 +49,7 @@ def medicine_info(name: str, composition: str = "") -> dict | None:
     """Prompt 3. None when the model does not recognise the name (brand, then the known generic)."""
     key = (name, composition)
     if key not in _INFO:
-        info = _ask_info(name, composition) or (_ask_info(composition, composition) if composition else None)
+        info = _ask_info(name, composition) or (_ask_info(f"{composition}, as {name}", composition) if composition else None)
         if info is None:
             return None
         _INFO[key] = info
@@ -70,11 +70,23 @@ def _ask_info(name: str, composition: str) -> dict | None:
 
 
 def facts(rows: list[dict]) -> list[tuple[dict, str, dict | None]]:
-    """(row, label, info) per confirmed line. Labels are the ones the prompts expect."""
-    checks = [check_medicine(r["medicine"]) for r in rows]
+    """(row, label, info) per confirmed line. Labels are the ones the prompts expect.
+    Groq only writes facts once we know what a medicine contains (name lists or the medicine database):
+    from a brand name alone it invents ingredients or describes the wrong drug."""
+    looked_up = []  # (name as Groq sees it, composition)
+    for r in rows:
+        c, name = check_medicine(r["medicine"]), r["medicine"].strip()
+        comp, products = ("", "") if c["status"] == "unclear" else (c.get("generic", ""), "")
+        if c["status"] != "unclear" and not comp:
+            comp, products = lookup_composition(name)
+        looked_up.append((f"{name} (sold as {products})" if products else name, comp))
+
+    def info(name, comp):
+        found = medicine_info(name, comp) if comp else None
+        return {**found, "composition": comp} if found else None
+
     with ThreadPoolExecutor(8) as pool:
-        infos = list(pool.map(lambda r, c: None if c["status"] == "unclear"
-                              else medicine_info(r["medicine"].strip(), c.get("generic", "")), rows, checks))
+        infos = list(pool.map(info, *zip(*looked_up))) if rows else []
     return [(r, IN_LIST if i else UNCONFIRMED, i) for r, i in zip(rows, infos)]
 
 

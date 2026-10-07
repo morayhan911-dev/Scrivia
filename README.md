@@ -8,7 +8,7 @@ Handwritten prescriptions are hard to read, for people and for software. So Scri
 
 1. Upload. Gemini reads the photo and pulls out each medicine, its dose and how often to take it. If it can't make out a word, it writes UNCLEAR instead of guessing.
 2. Check. Each name is spell-checked against a list of common Indian brands and the 150 most prescribed generics. A name on the list goes straight through. Anything else gets flagged so you can confirm it against your slip, and likely misreads come with a suggestion (say, "Folite" when the slip says Folvite). The Confirm button stays locked until you've dealt with every flagged line, and you can edit any cell in the table.
-3. Understand. Groq looks up every confirmed medicine, whether it matched the list or you confirmed it yourself, and writes a short note on each one: what it's usually for, precautions, common side effects and when to see a doctor. You can open the report as a PDF or download it, and ask questions in the chat.
+3. Understand. Scrivia finds out what each confirmed medicine contains, from the name lists or from a bundled database of about 250,000 Indian brands, and Groq writes a short note on each one from those ingredients: what it's usually for, precautions, common side effects and when to see a doctor. You can open the report as a PDF or download it, and ask questions in the chat.
 
 The chat only knows about the prescription in front of it. Its memory lives in your browser session and disappears when you close the tab or start over. Nothing gets written to disk.
 
@@ -61,6 +61,7 @@ GROQ_API_KEY = "..."
 | `backend/report_generator.py`, `backend/report.py` | The written report and its PDF version |
 | `backend/safety.py` | Name checking, and turning "1-0-1" into "morning and night" |
 | `backend/spellcheck/` | The list of 150 common generics |
+| `backend/medicine_db/` | About 250,000 Indian brands and their ingredients |
 | `dummy_data.py`, `assets/samples/` | The demo prescriptions |
 
 `python backend/safety.py` runs a quick self-check and prints `ok`.
@@ -71,7 +72,9 @@ Groq's free tier allows 8,000 tokens a minute. A report for five medicines uses 
 
 Gemini's speed varies a lot from minute to minute. Reading a photo usually takes somewhere between 3 and 13 seconds.
 
-The name lists only exist to save clicks and catch spelling slips. A name that isn't on them still works: you confirm it, and Groq looks it up. If Groq doesn't recognise a name, the report says so instead of guessing.
+The name lists only exist to save clicks and catch spelling slips. A name that isn't on them still works: you confirm it, and Scrivia looks it up in the medicine database. Groq only writes about a medicine once its ingredients are known, because from a brand name alone it tends to invent ingredients or describe the wrong drug. If a name isn't in the database (ayurvedic products like Liv 52, or brands launched after 2022), the report says so instead of guessing.
+
+The medicine database in `backend/medicine_db/` is a trimmed copy of the A-Z Medicine Dataset of India by Shudhanshu Singh, licensed CC BY-SA 4.0. See the README in that folder.
 
 On Gemini's free tier, Google may use uploaded images to improve its models. Prescriptions are health records, so switch to a paid key before real patients use this.
 
