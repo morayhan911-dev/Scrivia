@@ -32,7 +32,8 @@ def ask(messages: list[dict], json_mode: bool = False) -> str:
     r = _groq().chat.completions.create(
         model=MODEL, messages=messages, temperature=0.2,
         **({"response_format": {"type": "json_object"}} if json_mode else {}))
-    return r.choices[0].message.content.strip()
+    # the model likes narrow no-break spaces and hyphens ("Pan 40"); plain ones read and match better
+    return r.choices[0].message.content.translate({0x202F: " ", 0xA0: " ", 0x2011: "-"}).strip()
 
 
 @lru_cache(maxsize=256)  # ponytail: general drug facts only, no patient data, so a process-wide cache is fine

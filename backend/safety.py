@@ -52,7 +52,8 @@ def explain_frequency(freq: str) -> str:
     slots = [s for s, c in zip(("morning", "afternoon", "night"), m.groups()[:3]) if c != "0"]
     when = ", ".join(slots[:-1]) + " and " + slots[-1] if len(slots) > 1 else (slots or ["as directed"])[0]
     rest = re.sub(r"\b(at )?(morning|afternoon|night)\b", "", m[4], flags=re.I)  # already said by the slots
-    rest = re.sub(r"(\d+) days", r"for \1 days", re.sub(r"\s*,\s*(,\s*)*", ", ", rest)).strip(" ,")
+    rest = re.sub(r",?\s*\b(?:x\s*)?(\d+)\s*days?\b", r", for \1 days", rest)  # "x 3 days" / ", 3 days"
+    rest = re.sub(r"\s*,\s*(,\s*)*", ", ", rest).strip(" ,")
     return f"{when.capitalize()}, {rest}" if rest else when.capitalize()
 
 
@@ -61,6 +62,7 @@ if __name__ == "__main__":  # self-check: python backend/safety.py
     assert explain_frequency("1-0-0 morning, 30 days") == "Morning, for 30 days"
     assert explain_frequency("UNCLEAR").startswith("Not readable")
     assert explain_frequency("BD") == "BD"
+    assert explain_frequency("1 - 1 - 1 after food x 3 days") == "Morning, afternoon and night, after food, for 3 days"
     assert check_medicine("Folite") == {"status": "suggest", "suggestion": "Folvite"}
     assert check_medicine("dolo  650")["generic"] == "Paracetamol 650 mg"
     assert check_medicine("Zentrovix")["status"] == "unrecognized"

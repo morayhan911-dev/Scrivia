@@ -155,7 +155,7 @@ def report(md):
   <header class="med__head"><h3>{escape(name)}</h3><p class="med__dose mono">{escape(head.get('Dose', ''))}</p>
   <p class="med__when">{escape(head.get('When', ''))}</p></header>
   <dl class="med__facts">{body}</dl></article>""")
-    lead = escape(intro.replace("#", "").strip())
+    lead = escape(intro.replace("#", "").strip()).replace("\n", "<br>")
     return f'<section class="report" data-step="3"><p class="lede">{lead}</p><div class="meds">{"".join(cards)}</div></section>'
 
 

@@ -16,7 +16,7 @@ def generate_report(rows: list[dict]) -> str:
     summary = ask([{"role": "system", "content": SUMMARY_PROMPT},
                    {"role": "user", "content": f"PRESCRIPTION DATA:\n{json.dumps(rows, indent=1)}\n\n"
                                                f"MEDICINE FACTS:\n{facts_text(meds)}"}])
-    out = [" ".join(summary.split())]
+    out = ["\n".join(line.strip() for line in summary.splitlines() if line.strip())]  # one line per medicine
     for r, label, info in meds:
         out += ["", f"## {r['medicine'] or 'Unreadable name'}", f"**Dose:** {r['dosage']}",
                 f"**When:** {explain_frequency(r['frequency'])}"]
