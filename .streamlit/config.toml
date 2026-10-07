@@ -1,6 +1,6 @@
 [server]
 headless = true
-maxUploadSize = 10  # MB; Gemini inline images cap near 20 MB
+maxUploadSize = 25  # MB; photos are shrunk to a 1600px JPEG before Gemini sees them
 
 [browser]
 gatherUsageStats = false
