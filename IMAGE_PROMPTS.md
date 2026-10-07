@@ -1,4 +1,4 @@
-# NexCura image prompts
+# Scrivia image prompts
 
 Paste each prompt into your image model. Save with the exact filename into the path shown.
 Until your files arrive the app uses neutral placeholders at the same aspect ratios, and a CSS/typographic wordmark replaces the logo.

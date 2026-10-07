@@ -1,0 +1,25 @@
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#2953A5"
+backgroundColor = "#FAF6EF"
+secondaryBackgroundColor = "#F1ECE3"
+textColor = "#1B222E"
+font = "Geist, 'Segoe UI', system-ui, sans-serif"
+headingFont = "Newsreader, Georgia, serif"
+codeFont = "'Geist Mono', Consolas, monospace"
+baseRadius = "6px"
+borderColor = "#D9D4C9"
+showSidebarBorder = true
+
+[theme.sidebar]
+backgroundColor = "#F1ECE3"
+secondaryBackgroundColor = "#FEFDF9"

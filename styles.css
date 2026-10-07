@@ -1,4 +1,4 @@
-/* NexCura design tokens (M0). Concept: typed transcription on warm paper,
+/* Scrivia design tokens (M0). Concept: typed transcription on warm paper,
    ballpoint-ink accent, highlighter marks what the human must check.
    Hex in comments = values used in IMAGE_PROMPTS.md. All text pairs >= 5.6:1. */
 :root {
@@ -40,3 +40,4 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --d-press: 140ms; --d-state: 200ms; --d-enter: 260ms;
 }
+/* M2 styles follow */
