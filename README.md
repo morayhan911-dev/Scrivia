@@ -7,8 +7,8 @@ Handwritten prescriptions are hard to read, for people and for software. So Scri
 ## How it works
 
 1. Upload. Gemini reads the photo and pulls out each medicine, its dose and how often to take it. If it can't make out a word, it writes UNCLEAR instead of guessing.
-2. Check. Each name is compared against a list of common Indian brands and the 150 most prescribed generics. Unknown names and likely misreads (say, "Folite" when the slip says Folvite) get flagged, and the Confirm button stays locked until you've dealt with every flagged line. You can edit any cell in the table.
-3. Understand. Groq writes a short note on each confirmed medicine: what it's usually for, precautions, common side effects and when to see a doctor. You can open the report as a PDF or download it, and ask questions in the chat.
+2. Check. Each name is spell-checked against a list of common Indian brands and the 150 most prescribed generics. A name on the list goes straight through. Anything else gets flagged so you can confirm it against your slip, and likely misreads come with a suggestion (say, "Folite" when the slip says Folvite). The Confirm button stays locked until you've dealt with every flagged line, and you can edit any cell in the table.
+3. Understand. Groq looks up every confirmed medicine, whether it matched the list or you confirmed it yourself, and writes a short note on each one: what it's usually for, precautions, common side effects and when to see a doctor. You can open the report as a PDF or download it, and ask questions in the chat.
 
 The chat only knows about the prescription in front of it. Its memory lives in your browser session and disappears when you close the tab or start over. Nothing gets written to disk.
 
@@ -71,7 +71,7 @@ Groq's free tier allows 8,000 tokens a minute. A report for five medicines uses 
 
 Gemini's speed varies a lot from minute to minute. Reading a photo usually takes somewhere between 3 and 13 seconds.
 
-The list of verified brand names is small and was put together by hand. A proper drug database would catch more misreads.
+The name lists only exist to save clicks and catch spelling slips. A name that isn't on them still works: you confirm it, and Groq looks it up. If Groq doesn't recognise a name, the report says so instead of guessing.
 
 On Gemini's free tier, Google may use uploaded images to improve its models. Prescriptions are health records, so switch to a paid key before real patients use this.
 

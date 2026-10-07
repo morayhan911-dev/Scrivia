@@ -37,9 +37,9 @@ from . import safety
 # ---------------------------------------------------------------------
 
 SOURCE_LINES = {
-    "list": "Source: our verified medicine list",
+    "list": "Source: Scrivia medicine lookup",
     "general": "Source: AI general knowledge. NOT checked against our list - please confirm with your pharmacist.",
-    "unconfirmed": "We could not confirm this medicine, so no details are given. Please ask your pharmacist.",
+    "unconfirmed": "We could not find this medicine, so no details are given. Please ask your pharmacist.",
 }
 
 LIGHT_RED = colors.Color(1, 0.9, 0.9)
@@ -95,12 +95,12 @@ def source_of(info, check):
 
 def check_text(source, check):
     if source == "list":
-        return "In our verified list"
+        return "Name matched our list" if check["status"] == "verified" else "Name confirmed by you"
     if source == "general":
         return "Confirmed by you - not in our list"
     if check["status"] == "suggest":
         return "Looks like " + check["suggestion"] + " - please verify"
-    return "Not confirmed - ask your pharmacist"
+    return "Not found - ask your pharmacist"
 
 
 def add_list(parts, title, items, style, bullet_style):
@@ -117,7 +117,7 @@ def medicine_block(med, check, info, source, styles, bullet_style):
 
     title = "<b>" + safe(med["name"]) + "</b>"
     if check.get("generic", "") != "" and source != "unconfirmed":
-        if check.get("generic", "").strip().lower() != str(med["name"]).strip().lower():
+        if not str(med["name"]).strip().lower().startswith(check.get("generic", "").strip().lower()):
             title = title + " (" + safe(check.get("generic", "")) + ")"
     parts.append(Paragraph(title, styles["Heading3"]))
 

@@ -20,7 +20,9 @@ _OCR, _STRUCTURE, INFO_PROMPT, SUMMARY_PROMPT, CHAT_PROMPT = [
     re.split(r"\n\s*<{5,}", p)[0].strip()
     for p in re.split(r">{5,}\s*COPY FROM THE NEXT LINE\s*>{5,}[^\n]*\n", _helper)[1:]]
 
-IN_LIST, GENERAL, UNCONFIRMED = "IN OUR LIST", "CONFIRMED BY PATIENT, NOT IN OUR LIST", "NOT CONFIRMED"
+# The name lists (brands + 150 generics) only spell-check and spare the patient a confirmation click.
+# Facts always come from Groq: a name is IN OUR LIST once Groq has facts for it, however it was confirmed.
+IN_LIST, UNCONFIRMED = "IN OUR LIST", "NOT CONFIRMED"
 
 
 @cache
@@ -70,12 +72,10 @@ def _ask_info(name: str, composition: str) -> dict | None:
 def facts(rows: list[dict]) -> list[tuple[dict, str, dict | None]]:
     """(row, label, info) per confirmed line. Labels are the ones the prompts expect."""
     checks = [check_medicine(r["medicine"]) for r in rows]
-    status = [c["status"] for c in checks]
     with ThreadPoolExecutor(8) as pool:
         infos = list(pool.map(lambda r, c: None if c["status"] == "unclear"
                               else medicine_info(r["medicine"].strip(), c.get("generic", "")), rows, checks))
-    return [(r, IN_LIST if s == "verified" else GENERAL if i else UNCONFIRMED, i)
-            for r, s, i in zip(rows, status, infos)]
+    return [(r, IN_LIST if i else UNCONFIRMED, i) for r, i in zip(rows, infos)]
 
 
 def facts_text(meds) -> str:

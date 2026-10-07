@@ -108,7 +108,7 @@ def flag_item(line_no, row, status, suggestion, resolved, fixed=False):
     hint = {
         "suggest": f"The scan read <b>{escape(row['medicine'])}</b>. A known medicine is spelled <b>{escape(suggestion or '')}</b>. Compare with your photo.",
         "unclear": "Part of this line could not be read. Type what the slip says in the table, or keep it and ask your doctor.",
-        "unrecognized": "This name is not in our list. It may be a misread or a brand we do not know. Check the spelling against your photo.",
+        "unrecognized": "This name is not in our spell-check list. Compare it with your photo. If it matches, keep it and we will look it up.",
         "verified": "",
     }[status]
     if not row["medicine"].strip():
