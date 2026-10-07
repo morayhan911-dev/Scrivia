@@ -169,7 +169,7 @@ DISCLAIMER = ("Scrivia helps you read a prescription. It does not diagnose, pres
 
 def disclaimer():
     return f"""<aside class="disclaimer" aria-label="Medical disclaimer"><p class="disclaimer__title">Not medical advice</p>
-<p>{DISCLAIMER}</p><p class="disclaimer__privacy">Your photo is processed in memory and never stored.</p></aside>"""
+<p>{DISCLAIMER}</p><p class="disclaimer__privacy">Your photo is sent to Google Gemini to be read. Scrivia does not save it.</p></aside>"""
 
 
 def footer():

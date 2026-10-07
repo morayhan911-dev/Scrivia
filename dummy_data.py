@@ -1,5 +1,5 @@
 """Canned demo data. Source of truth for the sample prescription images
-(IMAGE_PROMPTS.md must match these lines exactly). Reports + chat added in M1."""
+(IMAGE_PROMPTS.md must match these lines exactly). Used only for the demo-mode photos."""
 
 SAMPLES = {
     "fever": {
@@ -35,54 +35,6 @@ SAMPLES = {
         ],
     },
 }
-
-# check_medicine() lookup; anything absent -> "unrecognized".
-KNOWN = {
-    "dolo 650", "pan 40", "azithral 500", "cetzine", "folvite", "shelcal 500",
-    "thyronorm", "ecosprin 75", "glycomet 500", "telma 40", "atorva 10",
-}
-LOOKALIKES = {"folite": "Folvite"}
-
-# Plain-English notes used by generate_report() and chat_reply(): (what for, how to take, watch for).
-MED_INFO = {
-    "dolo 650": ("Paracetamol. Brings down fever and eases mild pain.",
-                 "Take after food. Keep at least 4 to 6 hours between doses.",
-                 "Do not take other paracetamol products alongside it. Avoid alcohol."),
-    "pan 40": ("Pantoprazole. Lowers stomach acid and protects the stomach lining.",
-               "Swallow whole, 30 to 60 minutes before breakfast.",
-               "Headache or loose stools. Ask before using it for months at a time."),
-    "azithral 500": ("Azithromycin, an antibiotic for bacterial infections.",
-                     "Finish every dose, even if you feel better early.",
-                     "Loose stools, nausea or stomach upset."),
-    "cetzine": ("Cetirizine. Calms allergy symptoms like sneezing, runny nose and itching.",
-                "Take at bedtime because it can make you sleepy.",
-                "Drowsiness. Do not drive if you feel sleepy. Alcohol makes it worse."),
-    "folvite": ("Folic acid (vitamin B9). Used for anaemia and during pregnancy.",
-                "Take once a day, at the same time each day.",
-                "Usually well tolerated. Tell your doctor about any rash."),
-    "shelcal 500": ("Calcium with vitamin D3 for bone strength.",
-                    "Take after food. Keep it 4 hours apart from a thyroid tablet.",
-                    "Constipation or bloating."),
-    "thyronorm": ("Levothyroxine. Replaces thyroid hormone your body is short of.",
-                  "Take on an empty stomach, 30 to 60 minutes before breakfast, same time daily.",
-                  "Fast heartbeat, sweating or weight loss can mean the dose is too high."),
-    "ecosprin 75": ("Low-dose aspirin. Thins the blood to lower the risk of heart attack and stroke.",
-                    "Take after food.",
-                    "Unusual bleeding, black stools or stomach pain. Tell any dentist you take it."),
-    "glycomet 500": ("Metformin. Lowers blood sugar in type 2 diabetes.",
-                     "Take with or right after a meal.",
-                     "Stomach upset or loose stools in the first weeks."),
-    "telma 40": ("Telmisartan. Lowers blood pressure.",
-                 "Take at the same time every day.",
-                 "Dizziness when you stand up quickly."),
-    "atorva 10": ("Atorvastatin. Lowers cholesterol.",
-                  "Usually taken at night, with or without food.",
-                  "Muscle pain or weakness you cannot explain."),
-}
-
-FALLBACK = ("I can only explain what is in your verified prescription. For anything else, "
-            "including whether a medicine is right for you, please ask your doctor or pharmacist.")
-
 
 def sample_for(filename):
     """Map an uploaded filename to a sample key, or None."""

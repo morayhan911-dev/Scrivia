@@ -1,14 +1,15 @@
-"""Scrivia: upload a prescription, check what was read, then understand it. Frontend only."""
+"""Scrivia: upload a prescription, check what was read, then understand it."""
 import io
+import os
 
 import pandas as pd
 import streamlit as st
 from PIL import Image
 
 import ui
-# Backend contract. To use the real backend, change only this import.
-from backend_stub import chat_reply, check_medicine, extract_prescription, generate_report
-from dummy_data import SAMPLES, sample_for
+# Backend contract: Gemini reads the photo, Groq writes the report and the chat answers.
+from backend import chat_reply, check_medicine, extract_prescription, generate_report
+from dummy_data import SAMPLES
 
 APP_NAME = "Scrivia"
 COLS = ["medicine", "dosage", "frequency"]
@@ -89,13 +90,13 @@ def go(step):
 # ---------- sidebar ----------
 with st.sidebar:
     st.html(ui.wordmark(APP_NAME))
-    st.toggle("Demo mode", key="demo_mode", help="Uses built-in sample prescriptions. Works with no internet.")
+    st.toggle("Demo mode", key="demo_mode", help="Preloads a built-in sample prescription photo.")
     st.selectbox("Sample prescription", list(SAMPLES), key="selected_sample",
                  format_func=lambda k: SAMPLES[k]["label"], disabled=not ss.demo_mode)
     with st.expander("Connections"):
-        st.caption("The backend keys go here once it is connected. Demo mode needs none.")
-        st.text_input("Text reading service", type="password", disabled=True, placeholder="Not connected")
-        st.text_input("Explanation service", type="password", disabled=True, placeholder="Not connected")
+        st.caption("Keys live in backend/env.")
+        for label, key in (("Photo reading (Gemini)", "GEMINI_API_KEY"), ("Report and chat (Groq)", "GROQ_API_KEY")):
+            st.caption(f"{label}: {'connected' if os.getenv(key) else 'missing ' + key}")
     st.html(ui.disclaimer())
 
 st.html(ui.steps(ss.step))
@@ -111,8 +112,6 @@ if ss.step == 1:
                                   help="JPG, PNG or WEBP. One page at a time.")
             if up:
                 data, fname = up.getvalue(), up.name
-                if ss.demo_mode and not sample_for(fname):
-                    fname = sample["filename"]  # demo: unknown uploads fall back to the selected sample
             elif ss.demo_mode:
                 data, fname = (ui.ROOT / "assets/samples" / sample["filename"]).read_bytes(), sample["filename"]
                 st.html(ui.sample_note(sample["label"]))
@@ -138,9 +137,14 @@ if ss.step == 1:
             st.rerun()
         with st.spinner("Reading each line of your prescription..."):
             try:
+                if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+                    raise RuntimeError("missing key")
                 rows = extract_prescription(data, fname)
-            except Exception:
-                rows, ss.error = None, "The reading service did not answer. Check your connection and try again."
+            except Exception as e:
+                print(f"extract_prescription failed: {e!r}")
+                rows, ss.error = None, ("Photo reading is not set up yet: add GEMINI_API_KEY to backend/env and restart."
+                                        if str(e) == "missing key" else
+                                        "The reading service did not answer. Check your connection and try again.")
         if rows == []:
             ss.error = "No medicine lines were found. Retake the photo flat, in good light, with every line in frame."
         if rows:
@@ -222,7 +226,8 @@ elif ss.step == 2:
             try:
                 ss.report = generate_report(df[COLS].to_dict("records"))
                 ss.chat_history, ss.step = [], 3
-            except Exception:
+            except Exception as e:
+                print(f"generate_report failed: {e!r}")
                 ss.error = "The report could not be written. Try again in a moment."
         st.rerun()
 
@@ -256,7 +261,8 @@ else:
             with st.chat_message("assistant", avatar=":material/description:"), st.spinner("Checking your lines..."):
                 try:
                     a = chat_reply(ss.chat_history, rows, q)
-                except Exception:
+                except Exception as e:
+                    print(f"chat_reply failed: {e!r}")
                     a = "Sorry, I could not answer that just now. Please try again."
                 st.markdown(a)
             ss.chat_history += [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
