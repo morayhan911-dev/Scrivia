@@ -7,7 +7,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
-Keys go in `backend/env` (gitignored): `GEMINI_API_KEY=...` and `GROQ_API_KEY=...`. Optional overrides: `GEMINI_MODEL` (default `gemini-3.5-flash`, falls back to flash-lite models on failure), `GROQ_MODEL` (default `openai/gpt-oss-120b`). Self-check: `python backend/safety.py` prints `ok`. Demo Mode preloads a sample photo; it is still read by Gemini, so it needs the internet.
+Keys go in `backend/env` (gitignored): `GEMINI_API_KEY=...` and `GROQ_API_KEY=...`. Optional overrides: `GEMINI_MODEL` (default `gemini-3.1-flash-lite` for speed, falls back to `gemini-3.5-flash` then `gemini-flash-lite-latest` on failure), `GROQ_MODEL` (default `openai/gpt-oss-120b`). Self-check: `python backend/safety.py` prints `ok`. Demo Mode preloads a sample photo; it is still read by Gemini, so it needs the internet.
 
 **Files:** `app.py` holds the step state machine and layout. `ui.py` has the HTML helpers (escaped, via `st.html`). `styles.css` holds the tokens and all styling; it is injected once and its fonts are inlined. `backend/` is the real backend: `backend_ocr.py` (Gemini reads the photo with the rules in `PRESCRIPTION-OCR.txt`), `backend_groq.py` (Groq LLM, prompts 3-5 parsed from `PRESCRIPTION-HELPER.txt`, chat), `report_generator.py` (report), `safety.py` (verified name list + frequency in words), `report.py` (PDF layout, reportlab), `chatbot.py` (terminal chat: `python -m backend.chatbot photo.jpg`). `dummy_data.py` has the 3 demo samples. `.streamlit/config.toml` sets the theme. `assets/` holds the fonts, placeholder images and sample slips. `IMAGE_PROMPTS.md` lists the images to generate. `verification/` holds the Playwright screenshots.
 

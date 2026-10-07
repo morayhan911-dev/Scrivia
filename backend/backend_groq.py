@@ -4,7 +4,7 @@ import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from functools import cache, lru_cache
+from functools import cache
 from pathlib import Path
 
 from groq import Groq
@@ -25,20 +25,36 @@ IN_LIST, GENERAL, UNCONFIRMED = "IN OUR LIST", "CONFIRMED BY PATIENT, NOT IN OUR
 
 @cache
 def _groq():
-    return Groq()  # reads GROQ_API_KEY
+    return Groq(max_retries=5)  # reads GROQ_API_KEY; retries wait out the free tier's 8k tokens/minute limit
 
 
 def ask(messages: list[dict], json_mode: bool = False) -> str:
     r = _groq().chat.completions.create(
         model=MODEL, messages=messages, temperature=0.2,
+        # low effort: ~10x faster and steadier on gpt-oss (medium sometimes called Pan 40 "not recognised")
+        **({"reasoning_effort": "low"} if MODEL.startswith("openai/gpt-oss") else {}),
         **({"response_format": {"type": "json_object"}} if json_mode else {}))
     # the model likes narrow no-break spaces and hyphens ("Pan 40"); plain ones read and match better
     return r.choices[0].message.content.translate({0x202F: " ", 0xA0: " ", 0x2011: "-"}).strip()
 
 
-@lru_cache(maxsize=256)  # ponytail: general drug facts only, no patient data, so a process-wide cache is fine
+# ponytail: general drug facts only, no patient data, so a process-wide cache is fine.
+# Only recognised answers are cached, so one flaky "not recognised" never sticks for the whole server.
+_INFO: dict[tuple[str, str], dict] = {}
+
+
 def medicine_info(name: str, composition: str = "") -> dict | None:
-    """Prompt 3. None when the model does not recognise the name."""
+    """Prompt 3. None when the model does not recognise the name (brand, then the known generic)."""
+    key = (name, composition)
+    if key not in _INFO:
+        info = _ask_info(name, composition) or (_ask_info(composition, composition) if composition else None)
+        if info is None:
+            return None
+        _INFO[key] = info
+    return _INFO[key]
+
+
+def _ask_info(name: str, composition: str) -> dict | None:
     info = json.loads(ask([{"role": "system", "content": INFO_PROMPT},
                            {"role": "user", "content": f"Medicine name: {name}\nComposition (if known): {composition or 'not known'}"}],
                           json_mode=True))

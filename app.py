@@ -4,6 +4,7 @@ import os
 
 import pandas as pd
 import streamlit as st
+from streamlit import runtime
 from PIL import Image
 
 import ui
@@ -244,8 +245,13 @@ else:
     else:
         st.markdown(ss.report)
     if ss.pdf:
-        st.download_button("Download report (PDF)", ss.pdf, file_name="scrivia-report.pdf", mime="application/pdf",
-                           icon=":material/download:", on_click="ignore")
+        # ponytail: Streamlit's media store serves non-download files inline, so the link opens the browser's PDF
+        # viewer. Private API (Streamlit pinned to 1.65); re-added each run, so the URL lives as long as this page.
+        pdf_url = runtime.get_instance().media_file_mgr.add(ss.pdf, "application/pdf", "scrivia_report_pdf")
+        with st.container(horizontal=True, key="pdf_actions"):
+            st.link_button("Open report (PDF)", pdf_url, type="primary", icon=":material/picture_as_pdf:")
+            st.download_button("Download PDF", ss.pdf, file_name="scrivia-report.pdf", mime="application/pdf",
+                               icon=":material/download:", on_click="ignore")
     st.html(ui.disclaimer())
 
     st.subheader("Ask about these medicines", anchor=False)

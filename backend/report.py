@@ -154,7 +154,8 @@ def medicine_block(med, check, info, source, styles, bullet_style):
 def make_pdf(data, checks, summary, infos=None):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=1.5 * cm, rightMargin=1.5 * cm,
-                            topMargin=1.5 * cm, bottomMargin=1.5 * cm)
+                            topMargin=1.5 * cm, bottomMargin=1.5 * cm,
+                            title="Scrivia prescription report", author="Scrivia")
     styles = getSampleStyleSheet()
     small = styles["Normal"]
     bullet_style = ParagraphStyle("bullet_small", parent=small, leftIndent=14)

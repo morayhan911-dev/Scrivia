@@ -9,7 +9,7 @@ from google import genai
 from google.genai import types
 
 # tried in order; the next one is used when a model fails (overloaded, out of quota, retired, timed out)
-MODELS = [os.getenv("GEMINI_MODEL", "gemini-3.5-flash"), "gemini-3.1-flash-lite", "gemini-flash-lite-latest"]
+MODELS = [os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite"), "gemini-3.5-flash", "gemini-flash-lite-latest"]
 RULES = (Path(__file__).parent / "PRESCRIPTION-OCR.txt").read_text(encoding="utf-8")
 COLS = ("medicine", "dosage", "frequency")
 SCHEMA = {"type": "array", "items": {"type": "object", "required": list(COLS),
