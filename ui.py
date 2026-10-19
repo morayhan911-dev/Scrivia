@@ -86,11 +86,11 @@ def step_head(step, title, lede):
 
 def framing(total, flagged, done):
     need = (f"<strong>{done} of {flagged} flagged lines checked</strong>" if flagged
-            else "<strong>All of them match known medicines</strong>")
+            else "<strong>Nothing flagged. Compare the table with your photo.</strong>")
     return f"""<div class="framing">
   <div class="framing__part"><span class="framing__k">Read by the scanner</span><span class="framing__v">{total} lines</span></div>
   <span class="framing__arrow" aria-hidden="true"></span>
-  <div class="framing__part framing__part--you"><span class="framing__k">Confirmed by you</span><span class="framing__v">{need}</span></div>
+  <div class="framing__part framing__part--you"><span class="framing__k">Needs your check</span><span class="framing__v">{need}</span></div>
 </div>"""
 
 
@@ -125,17 +125,24 @@ def flag_item(line_no, row, status, suggestion, resolved, fixed=False):
 
 
 def all_clear():
-    return f'<div class="flag flag--verified">{chip("verified")}<p class="flag__hint">Every line matches a known medicine. Still glance at the table against your photo before confirming.</p></div>'
+    return f'<div class="flag flag--verified"><div class="flag__top">{chip("verified")}</div><p class="flag__hint">Every line matches a known medicine. Still glance at the table against your photo before confirming.</p></div>'
 
 
-def confirm_hint(lines):
+def confirm_hint(lines, flagged=True):
     if not lines:
-        return '<p class="hint hint--ok">Every flagged line has a decision. You can confirm.</p>'
+        msg = "Every flagged line has a decision. You can confirm." if flagged else "Nothing was flagged. You can confirm."
+        return f'<p class="hint hint--ok">{msg}</p>'
     which = ", ".join(str(n) for n in lines)
     return f'<p class="hint" role="status">Confirm unlocks after you fix or keep line{"s" if len(lines) > 1 else ""} {which}.</p>'
 
 
 _FIELD = re.compile(r"\*\*(.+?):\*\*\s*(.*)")
+
+
+def _value(v):
+    """'a; b; c' (how the report lists things) reads better as bullets."""
+    items = [escape(i.strip()) for i in v.split(";") if i.strip()]
+    return escape(v) if len(items) < 2 else "<ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>"
 
 
 def report(md):
@@ -149,11 +156,11 @@ def report(md):
         fields = [m.groups() for m in map(_FIELD.match, lines) if m]
         head = {k: v for k, v in fields if k in ("Dose", "When")}
         body = "".join(
-            f'<p class="med__note">{escape(v)}</p>' if k == "Note" else f"<div><dt>{escape(k)}</dt><dd>{escape(v)}</dd></div>"
+            f'<p class="med__note">{escape(v)}</p>' if k == "Note" else f"<div><dt>{escape(k)}</dt><dd>{_value(v)}</dd></div>"
             for k, v in fields if k not in head)
         cards.append(f"""<article class="med{' med--unknown' if 'Note' in dict(fields) else ''}">
   <header class="med__head"><h3>{escape(name)}</h3><p class="med__dose mono">{escape(head.get('Dose', ''))}</p>
-  <p class="med__when">{escape(head.get('When', ''))}</p></header>
+  <p class="med__when"><mark>{escape(head.get('When', ''))}</mark></p></header>
   <dl class="med__facts">{body}</dl></article>""")
     lead = escape(intro.replace("#", "").strip()).replace("\n", "<br>")
     return f'<section class="report" data-step="3"><p class="lede">{lead}</p><div class="meds">{"".join(cards)}</div></section>'

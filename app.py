@@ -214,7 +214,7 @@ elif ss.step == 2:
         st.rerun()
     st.button("Add a missing line", icon=":material/add:", on_click=add_row)
 
-    st.html(ui.confirm_hint(pending))
+    st.html(ui.confirm_hint(pending, bool(flagged)))
     with st.container(horizontal=True, key="step2_actions"):
         st.button("Start over", on_click=reset, icon=":material/restart_alt:")
         confirm = st.button(f"Confirm {len(df)} line{'s' if len(df) != 1 else ''}", type="primary",
@@ -282,4 +282,5 @@ else:
         st.button("Back to checking", on_click=go, args=(2,), icon=":material/arrow_back:")
         st.button("Start a new prescription", on_click=reset, type="primary", icon=":material/restart_alt:")
 
-st.html(ui.footer())
+if ss.step != 3:  # step 3 already shows the disclaimer under the report
+    st.html(ui.footer())
